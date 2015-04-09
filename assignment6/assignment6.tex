@@ -1,0 +1,25 @@
+\documentclass{article}
+\usepackage{fancyhdr}
+\usepackage{listings}
+\pagestyle{fancy}
+\lstset{language=SQL}
+\begin{document}
+\begin{description}
+	\item[1.]
+	\begin{lstlisting}
+CREATE TABLE EMPLOYEE
+	(Fname VARCHAR(15)	NOT NULL,
+	 Minit CHAR,
+	 Lname VARCHAR(15) NOT NULL,
+	 Ssn CHAR(9) NOT NULL,
+	 Bdate DATE,
+	 Address VARCHAR(45),
+	 Sex CHAR,
+	 Salary DECIMAL(10,2),
+	 Super_ssn CHAR(9),
+	 Dno INT	NOT NULL,
+	PRIMARY KEY (Ssn),
+	FOREIGN KEY (Super_ssn) REFERENCES EMPLOYEE(Ssn));	
+	\end{lstlisting}
+\end{description}
+\end{document}

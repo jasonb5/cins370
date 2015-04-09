@@ -1,0 +1,92 @@
+\documentclass[12pt,a4paper,oneside]{report}
+\usepackage{fancyhdr}
+\usepackage{listings}
+\pagestyle{fancy}
+\lstset{language=SQL}
+\lhead{Jason Boutte}
+\rhead{CINS370}
+\chead{Assignment \#5}
+\begin{document}
+\begin{description}
+	\item[4.12]
+	\begin{description}
+		\item[a.]\hfill
+		\begin{lstlisting}
+SELECT Name
+FROM STUDENT
+WHERE Class=4 AND Major='CS';
+		\end{lstlisting}
+		\item[b.]\hfill
+		\begin{lstlisting}
+SELECT Course_name
+FROM COURSE C, SECTION S
+WHERE C.Course_number=S.Course_number AND
+	Instructor='King' AND 
+	(Year='07' OR Year='08');		
+		\end{lstlisting}
+		\item[c.]\hfill
+		\begin{lstlisting}
+SELECT Course_number, Semester, Year, Count(*) 
+FROM SECTION S, GRADE_REPORT GR
+WHERE Instructor='King' AND
+	S.Section_identifier=GR.Section_identifier
+GROUP BY Course_number, Semester, Year;
+		\end{lstlisting}
+		\item[d.]\hfill
+		\begin{lstlisting}
+SELECT Name, Course_name, C.Course_number, 
+	Credit_hours, Semester, Year, Grade
+FROM STUDENT S, COURSE C, SECTION SE, GRADE_REPORT GR
+WHERE Class=4 AND 
+	S.Student_number=GR.Student_number AND
+	GR.Section_identifier=SE.Section_identifier AND
+	SE.Course_number=C.Course_number;	
+		\end{lstlisting}
+	\end{description}
+\end{description}
+\begin{description}
+	\item[5.6]
+	\begin{description}
+		\item[a.]\hfill
+		\begin{lstlisting}
+SELECT Name, Major
+FROM STUDENT
+WHERE NOT EXISTS 
+	(	SELECT Student_number
+		FROM GRADE_REPORT
+		WHERE NOT(Grade="A")
+		GROUP BY Student_number);
+		\end{lstlisting}
+	\end{description}
+	\item[5.7]
+	\begin{description}
+		\item[a.]\hfill
+		\begin{lstlisting}
+SELECT Fname, Minit, Lname
+FROM EMPLOYEE
+WHERE Dno = (
+	SELECT Dno
+	FROM EMPLOYEE
+	WHERE Salary = (
+		SELECT MAX(Salary)
+		FROM EMPLOYEE));
+		\end{lstlisting}
+		\item[b.]\hfill
+		\begin{lstlisting}
+SELECT Fname, Minit, Lname
+FROM EMPLOYEE
+WHERE Super_ssn IN (
+	SELECT Ssn
+	FROM EMPLOYEE
+	WHERE Super_ssn='888665555');
+		\end{lstlisting}
+		\item[c.]\hfill
+		\begin{lstlisting}
+SELECT Fname, Minit, Lname
+FROM EMPLOYEE
+WHERE Salary >= (
+	(SELECT MIN(Salary) FROM EMPLOYEE)+10000);	
+		\end{lstlisting}
+	\end{description}
+\end{description}
+\end{document}
