@@ -1,117 +1,200 @@
 #! /usr/bin/env python2
 
+import sys
 import time
 import csv
 import string
 import random
 import datetime
+import argparse
+from faker import Faker
 from amazon.api import AmazonAPI
 
 def parse_author(author):
-	tokens = string.split(author, ' ')
-	return (tokens[0], tokens[len(tokens)-1])
+  tokens = string.split(author, ' ')
+  return (tokens[0], tokens[len(tokens)-1])
 
-amazon = AmazonAPI('AKIAJPT5M67Z5DB6R3XA', 'P0ekhRiDVDC2xeJa4fZz1P5qHY/B2Qig71G6wZB3', 'thedeepdark-20')
+def generate_stock(index, list_price, price):
+  aval = bool(random.randint(0,1))
 
-subjects = amazon.browse_node_lookup(BrowseNodeId=1000)
+  aval_date = None
 
-book_list = []
-price_list = []
-author_dict = {}
-stock_list = []
+  if not aval:
+    t = datetime.date.today()
+    t += datetime.timedelta(random.randint(1, 30))
+    aval_date = str(t)
 
-book_index = 0
-author_index = 0
-stock_index = 0
+  digi = bool(random.randint(0, 1))
 
-# creates books and author lists
-for subject in subjects:
-	for genre in subject.children:
-		if genre.name.text == 'Calendars': continue
-		books = amazon.search_n(5000, BrowseNode=genre.id, SearchIndex='Books')
+  paper = None
+  hard = None
+  ordered = None
 
-		for book in books:
-			b_isbn = book.isbn
-			b_id = book_index
-			book_index += 1
-			b_title = book.title
-			b_pub_date = str(book.publication_date)
-			b_genre = genre.name
-			b_publisher = book.publisher
-			b_list_price = book.list_price[0]
-			b_price = book.price_and_currency[0]
+  if aval:
+    paper = random.randint(500, 1000)
+    hard = random.randint(100, 500)
+  else:
+    ordered = random.randint(500, 1000)
 
-			if len(book.authors) == 0:
-				break
+  cost = price
+  
+  if not list_price:
+    mark_up = 0.0
+  else:
+    mark_up = round((float(list_price) / float(price))-1, 2)
+    mark_up = '%.2f'%(mark_up)
 
-			if not book.authors[0] in author_dict:
-				author_dict[book.authors[0]] = author_index
-				author_index += 1
+  return [index, aval, aval_date, digi, paper, hard, ordered, cost, mark_up, None]
 
-			book_item = [b_isbn, b_id, b_title, b_pub_date, b_publisher, b_genre]
+def format_csv():
+  f = open('data.csv', 'r')
+  reader = csv.reader(f)
 
-			book_list.append(book_item)
+  book_list = []
+  stock_list = []
+  author_dict = {}
 
-			price_item = [b_price, b_list_price]
+  book_index = 0
+  author_index = 0
 
-			price_list.append(price_item)
+  for row in reader:
+    isbn = row[0]
+    title = row[1]
+    author = row[2]
+    pub_date = row[3]
+    pub = row[4]
+    genre = row[5]
+    list_price = row[6]
+    price = row[7]
 
-			#for x in range(len(book_item)):
-			#	if isinstance(book_item[x], str):
-			#		book_item[x] = unicode(book_item[x], 'utf-8')
+    if not author in author_dict:
+      author_id = author_dict[author] = author_index
+      author_index += 1
+    else:
+      author_id = author_dict[author]
 
-		time.sleep(5)
+    stock = generate_stock(book_index, list_price, price)
+    stock_list.append(stock)
 
-for book in book_list:
-	aval = bool(random.randint(0, 1))
-	
-	aval_date = None
-	
-	if not aval:
-		curr = datetime.date.today()
-		curr += datetime.timedelta(random.randint(1, 30))
-		aval_date = curr
+    book = [isbn, book_index, title, pub_date, author_id, genre]
+    book_index += 1
 
-	digi = bool(random.randint(0, 1))
+    book_list.append(book)
 
-	paper = None
-	hard = None
-	ordered = None
+  f = open('book.csv', 'wb')
+  writer = csv.writer(f)
 
-	if aval:
-		paper = random.randint(1, 1000)
-		hard = random.randint(1, 500)
-	else:
-		ordered = random.randint(1, 1000)
+  for book in book_list:
+    writer.writerow(book)
 
-	price_item = price_list.index(book[1])	
+  f = open('author.csv', 'wb')
+  writer = csv.writer(f)
 
-	b_cost = price_item[0]
+  for author, aid in author_dict.iteritems():
+    pauthor = parse_author(author)
+    author_item = [aid, pauthor[0], pauthor[1]]
+    writer.writerow(author_item)
 
-	b_markup = 1 - (price_item[1] - price_item[0])
+  f = open('stock.csv', 'wb')
+  writer = csv.writer(f)
 
-	b_price = None
+  for stock in stock_list:
+    writer.writerow(stock)
 
-	stock_item = []
-	stock_item.append(stock_index)
-	stock_index += 1
-	stock_item.append(aval)
-	if aval:
-		stock_item.append('')
-	else:
-		stock_item.append(aval_date)
-	stock_item.append(digi)
-	if aval:
-		stock_item.append(paper)
-		stock_item.append(hard)
-		stock_item.append('')
-	else:
-		stock_item.append('')
-		stock_item.append('')
-		stock_item.append(ordered)
+  fake = Faker()
 
-	stock.append(b_cost)
-	stock.append(b_markup)
-	stock.append('')
+  f = open('customer.csv', 'wb')
+  writer = csv.writer(f)
 
-	stock_list.append(stock)
+  f1 = open('creditcard.csv', 'wb')
+  cc_writer = csv.writer(f1)
+
+  for x in range(500):
+    cid = x
+    user = fake.user_name()
+    fname = fake.first_name()
+    lname = fake.last_name()
+    addr = fake.address()
+    city = fake.city()
+    state = fake.state()
+    postc = fake.postcode()
+    email = fake.email()
+
+    person = [cid, user, fname, lname, addr, city, state, postc, email]
+    writer.writerow(person)
+
+    for x in range(random.randint(1, 2)):
+      cc_num = fake.credit_card_number()
+      cc_cust = x
+      cc_fname = fname
+      cc_lname = lname
+      cc_exp = fake.date()
+      cc_key = fake.credit_card_security_code()
+
+      cc = [cc_num, cc_cust, cc_fname, cc_lname, cc_exp, cc_key]
+      cc_writer.writerow(cc)
+
+  f = open('reviews.csv', 'wb')
+  writer = csv.writer(f)
+
+  for x in range(book_index-1):
+    review_num = random.randint(0, 30)
+    
+    for y in range(review_num):
+      review_cus = random.randint(0, 500)
+      review_book = x
+      review_rating = random.randint(0, 5)
+      review_text = fake.text()
+
+      review = [review_cus, review_book, review_rating, review_text]
+      writer.writerow(review)
+
+def generate_csv():
+  amazon = AmazonAPI('AKIAJPT5M67Z5DB6R3XA', 'P0ekhRiDVDC2xeJa4fZz1P5qHY/B2Qig71G6wZB3', 'thedeepdark-20')
+
+  subjects = amazon.browse_node_lookup(BrowseNodeId=1000)
+
+  f = open('data.csv', 'wb')
+  writer = csv.writer(f)
+
+  # creates books and author lists
+  for subject in subjects:
+    for genre in subject.children:
+      if genre.name.text == 'Calendars': continue
+
+      books = amazon.search_n(5000, BrowseNode=genre.id, SearchIndex='Books')
+
+      for book in books:
+        b_isbn = book.isbn
+        b_title = book.title
+        b_pub_date = str(book.publication_date)
+        b_genre = genre.name
+        b_publisher = book.publisher
+        b_list_price = book.list_price[0]
+        b_price = book.price_and_currency[0]
+
+        if len(book.authors) == 0:
+          break
+
+        book_item = [b_isbn, b_title, book.authors[0], b_pub_date, b_publisher, b_genre, b_list_price, b_price]
+
+        for x in range(len(book_item)):
+         if isinstance(book_item[x], str):
+           book_item[x] = unicode(book_item[x], 'utf-8')
+  
+        try:
+          writer.writerow(book_item)
+        except:
+          print("Couldn't write row")
+
+      time.sleep(5)
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-g', action='store_true')
+
+args = parser.parse_args()
+
+if args.g:
+  generate_csv()
+else:
+  format_csv()
