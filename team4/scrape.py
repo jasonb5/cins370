@@ -1,5 +1,18 @@
 #! /usr/bin/env python2
 
+# Created by: Jason Boutte
+# CINS 370 
+# Spring 2015
+# Phase 4 
+
+# Required libraries 
+# python-amazon-simple-product-api
+#  https://github.com/yoavaviram/python-amazon-simple-product-api
+# faker
+#  https://github.com/joke2k/faker
+
+# Python version 2.7.9
+
 import sys
 import time
 import csv
